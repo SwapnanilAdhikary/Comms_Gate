@@ -1,0 +1,5 @@
+node_modules/
+*.db
+.tmp/
+.test-data/
+test-data/

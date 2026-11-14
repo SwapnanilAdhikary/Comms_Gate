@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tide glass</title>
+<style>
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: #e6dfd2;
+    color: #1c2c33;
+    font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+  }
+  main {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 36px 28px 48px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 40px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  /* The script writes the next high and the next low here. */
+  #tides {
+    height: 1.5em;
+    margin: 6px 0 18px;
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #f6f1e7;
+    border-radius: 18px;
+    box-shadow: 0 18px 40px rgba(70, 48, 24, 0.08);
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Tide glass</h1>
+  <p id="tides"></p>
+  <!--
+    Static values below are a mid-tide fallback. The script at the end redraws
+    everything from one function, level(t): 0 = low water, 1 = high water.
+      gauge and curve:  y = 400 - level * 330
+      harbor:           y = 440 - level * 230  (own scale, so the piling cap stays dry)
+      curve x:          220 + (fraction of this half-day) * 420
+  -->
+  <svg viewBox="0 0 960 500" role="img" aria-label="A tide glass with a gauge, a twelve-hour curve, and a pelican standing on a piling">
+    <defs>
+      <clipPath id="tube">
+        <rect x="36" y="40" width="58" height="416" rx="29"/>
+      </clipPath>
+    </defs>
+
+    <!-- twelve-hour curve -->
+    <g id="chart" fill="none" stroke-linejoin="round" stroke-linecap="round">
+      <text id="chart-title" x="430" y="34" fill="#6d655c" stroke="none" font-size="14" letter-spacing="0.14em" text-anchor="middle">12 HOURS</text>
+      <path id="curve-fill" fill="#d5eaf0" stroke="none" d="M 220 235 L 237.5 192.3 L 255 152.5 L 272.5 118.3 L 290 92.1 L 307.5 75.6 L 325 70 L 342.5 75.6 L 360 92.1 L 377.5 118.3 L 395 152.5 L 412.5 192.3 L 430 235 L 447.5 277.7 L 465 317.5 L 482.5 351.7 L 500 377.9 L 517.5 394.4 L 535 400 L 552.5 394.4 L 570 377.9 L 587.5 351.7 L 605 317.5 L 622.5 277.7 L 640 235 L 640 400 L 220 400 Z"/>
+      <g stroke="#e3d9c8" stroke-width="1.5">
+        <line x1="220" y1="70" x2="640" y2="70"/>
+        <line x1="220" y1="400" x2="640" y2="400"/>
+      </g>
+      <line x1="220" y1="235" x2="640" y2="235" stroke="#cfc4b0" stroke-width="1.5"/>
+      <path id="curve" stroke="#1c3340" stroke-width="2.75" d="M 220 235 L 237.5 192.3 L 255 152.5 L 272.5 118.3 L 290 92.1 L 307.5 75.6 L 325 70 L 342.5 75.6 L 360 92.1 L 377.5 118.3 L 395 152.5 L 412.5 192.3 L 430 235 L 447.5 277.7 L 465 317.5 L 482.5 351.7 L 500 377.9 L 517.5 394.4 L 535 400 L 552.5 394.4 L 570 377.9 L 587.5 351.7 L 605 317.5 L 622.5 277.7 L 640 235"/>
+      <g stroke="#1c3340" stroke-width="1.25">
+        <line x1="220" y1="400" x2="220" y2="408"/>
+        <line x1="255" y1="400" x2="255" y2="406"/>
+        <line x1="290" y1="400" x2="290" y2="406"/>
+        <line x1="325" y1="400" x2="325" y2="408"/>
+        <line x1="360" y1="400" x2="360" y2="406"/>
+        <line x1="395" y1="400" x2="395" y2="406"/>
+        <line x1="430" y1="400" x2="430" y2="408"/>
+        <line x1="465" y1="400" x2="465" y2="406"/>
+        <line x1="500" y1="400" x2="500" y2="406"/>
+        <line x1="535" y1="400" x2="535" y2="408"/>
+        <line x1="570" y1="400" x2="570" y2="406"/>
+        <line x1="605" y1="400" x2="605" y2="406"/>
+        <line x1="640" y1="400" x2="640" y2="408"/>
+      </g>
+      <g fill="#5c564c" stroke="none" font-size="13" text-anchor="middle">
+        <text x="220" y="426">12</text>
+        <text x="325" y="426">3</text>
+        <text x="430" y="426">6</text>
+        <text x="535" y="426">9</text>
+        <text x="640" y="426">12</text>
+      </g>
+      <g id="mark" transform="translate(430 235)">
+        <line x1="0" y1="0" x2="0" y2="165" stroke="#b8432f" stroke-width="1.25" stroke-dasharray="2 3"/>
+        <circle r="6.5" fill="#f6f1e7" stroke="#b8432f" stroke-width="2.75"/>
+        <circle r="2.2" fill="#b8432f" stroke="none"/>
+      </g>
+    </g>
+
+    <!-- vertical gauge -->
+    <g id="gauge">
+      <text x="65" y="28" fill="#6d655c" font-size="14" letter-spacing="0.14em" text-anchor="middle">GAUGE</text>
+      <rect x="36" y="40" width="58" height="416" rx="29" fill="#e5eef1"/>
+      <g clip-path="url(#tube)">
+        <rect id="gauge-water" x="36" y="235" width="58" height="221" fill="#6eafc4"/>
+        <rect x="48" y="64" width="8" height="168" rx="4" fill="#fff" opacity="0.4"/>
+      </g>
+      <rect x="36" y="40" width="58" height="416" rx="29" fill="none" stroke="#1c3340" stroke-width="2.5"/>
+      <g stroke="#1c3340" stroke-width="1.5">
+        <line x1="94" y1="70" x2="112" y2="70"/>
+        <line x1="94" y1="235" x2="106" y2="235"/>
+        <line x1="94" y1="400" x2="112" y2="400"/>
+      </g>
+      <g fill="#1c3340" font-size="15">
+        <text x="120" y="75">High</text>
+        <text x="120" y="240">Mid</text>
+        <text x="120" y="405">Low</text>
+      </g>
+    </g>
+
+    <!-- piling, still water, pelican at rest on the cap -->
+    <g id="piling">
+      <text x="810" y="24" fill="#6d655c" font-size="14" letter-spacing="0.14em" text-anchor="middle">PILING</text>
+      <polygon points="798,192 822,192 834,470 786,470" fill="#c4925a" stroke="#6b4224" stroke-width="2" stroke-linejoin="round"/>
+      <line x1="810" y1="204" x2="808" y2="440" stroke="#a8753e" stroke-width="1.5"/>
+      <path d="M796 218 H824" stroke="#5c4030" stroke-width="4" stroke-linecap="round"/>
+      <g fill="#e4dccf" stroke="#8d8478" stroke-width="1">
+        <circle cx="804" cy="238" r="3.2"/>
+        <circle cx="818" cy="250" r="2.4"/>
+        <circle cx="806" cy="258" r="2"/>
+      </g>
+      <rect x="772" y="174" width="76" height="22" rx="2" fill="#8f5b34" stroke="#6b4224" stroke-width="2"/>
+      <circle cx="790" cy="185" r="1.6" fill="#3a2a1e"/>
+      <circle cx="830" cy="185" r="1.6" fill="#3a2a1e"/>
+    </g>
+    <rect x="690" y="448" width="250" height="36" fill="#e7d7bc"/>
+    <line x1="690" y1="448" x2="940" y2="448" stroke="#b7a488" stroke-width="2"/>
+    <g id="harbor-water">
+      <rect x="690" y="325" width="250" height="123" fill="#7eb6c8" opacity="0.92"/>
+      <line x1="690" y1="325" x2="940" y2="325" stroke="#1d6f86" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- the pelican stands on a float collar that rides the piling with the water -->
+    <g id="pelican" transform="translate(810 317)">
+      <rect x="-32" y="-2" width="64" height="12" rx="3" fill="#b98a55" stroke="#6b4224" stroke-width="2"/>
+      <path d="M-7 0 L-4 -34" fill="none" stroke="#c9852f" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M9 0 L5 -34" fill="none" stroke="#c9852f" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M-15 1 Q -8 6 -1 1" fill="none" stroke="#c9852f" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M4 1 Q 12 6 19 1" fill="none" stroke="#c9852f" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M-22 -48 L-48 -40 L-22 -62 Z" fill="#f4f4f4" stroke="#555" stroke-width="2" stroke-linejoin="round"/>
+      <ellipse cx="0" cy="-52" rx="32" ry="21" fill="#fff" stroke="#555" stroke-width="2"/>
+      <path d="M-14 -46 C 4 -80, 30 -74, 26 -48 C 12 -38, -2 -40, -12 -54 Z" fill="#eee" stroke="#555" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M16 -66 C 34 -70, 20 -100, 40 -118" fill="none" stroke="#555" stroke-width="14" stroke-linecap="round"/>
+      <path d="M16 -66 C 34 -70, 20 -100, 40 -118" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="46" cy="-122" r="13" fill="#fff" stroke="#555" stroke-width="2"/>
+      <circle cx="51" cy="-125" r="2" fill="#222"/>
+      <path d="M56 -124 L118 -114 L108 -110 L58 -116 Z" fill="#f2a33a" stroke="#c77a1a" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M54 -116 L112 -112 Q 80 -88 52 -114 Z" fill="#f7c06a" stroke="#c77a1a" stroke-width="1.5" stroke-linejoin="round"/>
+    </g>
+  </svg>
+</main>
+<script>
+// The one tide function. Everything on the page reads level(t).
+// ponytail: a single M2 cosine with a made-up epoch, so no real harbor and no spring/neap. Add harmonics to level() if that matters; the rest of the page follows.
+const MIN = 60e3, HOUR = 60 * MIN;
+const PERIOD = 12.4206 * HOUR;               // lunar semidiurnal, 12 h 25 min
+const T0 = Date.UTC(2026, 0, 1, 3, 0);       // an arbitrary high water
+const level = t => 0.5 + 0.5 * Math.cos(2 * Math.PI * (t - T0) / PERIOD);
+
+// Next peak (dir = 1) or trough (dir = -1) of level() after t, to the minute.
+function nextTurn(t, dir) {
+  for (t = Math.ceil(t / MIN) * MIN; ; t += MIN)
+    if (dir * (level(t) - level(t - MIN)) > 0 && dir * (level(t + MIN) - level(t)) <= 0) return t;
+}
+
+const $ = id => document.getElementById(id);
+const gaugeY = l => 400 - l * 330;
+const harborY = l => 440 - l * 230;
+const clock = t => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+// One full tide crosses the glass every 20s. The labels stay on real time.
+const SHOW_MS = 20e3;
+
+function draw(realNow) {
+  const shown = T0 + ((realNow % SHOW_MS) / SHOW_MS) * PERIOD;
+  const l = level(shown), y = gaugeY(l), h = harborY(l);
+  const x = t => 220 + (t - T0) / PERIOD * 420;
+  let d = '';
+  for (let i = 0; i <= 48; i++) {
+    const t = T0 + i / 48 * PERIOD;
+    d += (i ? ' L ' : 'M ') + x(t).toFixed(1) + ' ' + gaugeY(level(t)).toFixed(1);
+  }
+  $('curve').setAttribute('d', d);
+  $('curve-fill').setAttribute('d', d + ' L 640 400 L 220 400 Z');
+  $('chart-title').textContent = 'ONE TIDE';
+
+  const mark = $('mark');
+  mark.setAttribute('transform', `translate(${x(shown).toFixed(1)} ${y.toFixed(1)})`);
+  mark.querySelector('line').setAttribute('y2', (400 - y).toFixed(1));
+
+  $('gauge-water').setAttribute('y', y);
+  $('gauge-water').setAttribute('height', 456 - y);
+
+  const harbor = $('harbor-water');
+  harbor.querySelector('rect').setAttribute('y', h);
+  harbor.querySelector('rect').setAttribute('height', 448 - h);
+  harbor.querySelector('line').setAttribute('y1', h);
+  harbor.querySelector('line').setAttribute('y2', h);
+  $('pelican').setAttribute('transform', `translate(810 ${(h - 8).toFixed(1)})`);
+
+  const high = nextTurn(realNow, 1), low = nextTurn(realNow, -1);
+  $('tides').textContent = `Next high ${clock(high)} · Next low ${clock(low)}`;
+}
+
+requestAnimationFrame(function loop() {
+  draw(Date.now());
+  requestAnimationFrame(loop);
+});
+</script>
+</body>
+</html>

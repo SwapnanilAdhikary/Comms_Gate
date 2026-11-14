@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Pelican on a bicycle</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; }
+  svg { display: block; width: 100%; height: 100%; }
+</style>
+<!-- One ride cycle (1.5s): wheels turn twice, the crank once, and the body bobs twice. Legs share that clock. -->
+<svg viewBox="0 0 400 300" role="img" aria-label="A pelican riding a bicycle">
+  <defs>
+    <g id="wheel">
+      <circle r="50" fill="none" stroke="#333" stroke-width="5"/>
+      <g stroke="#999" stroke-width="1.5">
+        <line x1="-48" y1="0" x2="48" y2="0"/>
+        <line x1="0" y1="-48" x2="0" y2="48"/>
+        <line x1="-34" y1="-34" x2="34" y2="34"/>
+        <line x1="-34" y1="34" x2="34" y2="-34"/>
+      </g>
+      <circle r="4" fill="#333"/>
+    </g>
+  </defs>
+
+  <line x1="0" y1="273" x2="400" y2="273" stroke="#ddd" stroke-width="2"/>
+
+  <!-- far leg and shoe (behind the bike) -->
+  <polyline id="leg-far" points="164,151.5 219,158 190,202.5" fill="none" stroke="#c9852f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+  <g id="foot-far" transform="translate(190 202.5)">
+    <path d="M-8 0 h16 l-3 3.5 h-10 z" fill="#c9852f"/>
+  </g>
+
+  <!-- wheels. Rotation is set from the shared cycle. -->
+  <g transform="translate(110 220)"><g id="rear-wheel"><use href="#wheel"/></g></g>
+  <g transform="translate(290 220)"><g id="front-wheel"><use href="#wheel"/></g></g>
+
+  <!-- frame -->
+  <g fill="none" stroke="#1b7f9e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="110,220 190,225 175,150"/>
+    <polyline points="175,150 270,150 290,220"/>
+    <line x1="190" y1="225" x2="274" y2="165"/>
+    <polyline points="270,150 266,128 290,126" stroke="#333" stroke-width="4"/>
+  </g>
+  <path d="M158 146 h34 q4 0 0 6 h-30 z" fill="#333"/>
+
+  <!-- crank. Pedal shoes stay level by counter-rotating inside the arm. -->
+  <g transform="translate(190 225)"><g id="crank">
+    <circle r="11" fill="none" stroke="#555" stroke-width="3"/>
+    <line x1="0" y1="-22" x2="0" y2="22" stroke="#555" stroke-width="4" stroke-linecap="round"/>
+    <g id="pedal-far" transform="translate(0 -22.5)">
+      <rect x="-8" y="-2.5" width="16" height="5" rx="1" fill="#333"/>
+    </g>
+    <g id="pedal-near" transform="translate(0 22.5)">
+      <rect x="-8" y="-2.5" width="16" height="5" rx="1" fill="#333"/>
+    </g>
+  </g></g>
+
+  <!-- near leg and shoe -->
+  <polyline id="leg-near" points="178,153.5 212,198 190,247.5" fill="none" stroke="#f2a33a" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+  <g id="foot-near" transform="translate(190 247.5)">
+    <path d="M-9 0 h18 l-4 4 h-10 z" fill="#f2a33a"/>
+  </g>
+
+  <!-- pelican -->
+  <g id="pelican" transform="translate(0 3.5)">
+    <path d="M132 118 l-22 -6 l8 14 z" fill="#eee" stroke="#555" stroke-width="2" stroke-linejoin="round"/>
+    <ellipse cx="170" cy="122" rx="42" ry="25" transform="rotate(-12 170 122)" fill="#fff" stroke="#555" stroke-width="2"/>
+    <path d="M190 108 C 208 96, 200 78, 216 64" fill="none" stroke="#555" stroke-width="16" stroke-linecap="round"/>
+    <path d="M190 108 C 208 96, 200 78, 216 64" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="222" cy="62" r="14" fill="#fff" stroke="#555" stroke-width="2"/>
+    <circle cx="227" cy="58" r="2.2" fill="#222"/>
+    <path d="M234 70 L300 74 Q 262 102 234 74 Z" fill="#f7c06a" stroke="#c77a1a" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M233 57 L304 71 L234 69 Z" fill="#f2a33a" stroke="#c77a1a" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M150 112 Q 220 100 288 127 Q 222 124 158 132 Z" fill="#e6e6e6" stroke="#555" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+</svg>
+<script>
+(function () {
+  var CYCLE = 1500;
+  var WHEEL_TURNS = 2;
+  var CRANK = { x: 190, y: 225 };
+  var PEDAL_R = 22.5;
+  var PIVOT = { x: 170, y: 128 };
+  var HIPS = {
+    near: { x: 178, y: 150, l1: 56, l2: 54 },
+    far: { x: 164, y: 148, l1: 55, l2: 53 }
+  };
+
+  var rear = document.getElementById("rear-wheel");
+  var front = document.getElementById("front-wheel");
+  var crank = document.getElementById("crank");
+  var pelican = document.getElementById("pelican");
+  var legNear = document.getElementById("leg-near");
+  var legFar = document.getElementById("leg-far");
+  var footNear = document.getElementById("foot-near");
+  var footFar = document.getElementById("foot-far");
+  var pedalNear = document.getElementById("pedal-near");
+  var pedalFar = document.getElementById("pedal-far");
+
+  function pedal(deg, top) {
+    var t = deg * Math.PI / 180;
+    var x = (top ? 1 : -1) * PEDAL_R * Math.sin(t);
+    var y = (top ? -1 : 1) * PEDAL_R * Math.cos(t);
+    return { x: CRANK.x + x, y: CRANK.y + y };
+  }
+
+  function ride(phase) {
+    return {
+      bob: Math.cos(phase * Math.PI * 4) * 3.5,
+      sway: Math.sin(phase * Math.PI * 2) * 1.2,
+      lean: Math.sin(phase * Math.PI * 2) * 1.2
+    };
+  }
+
+  function hipAt(local, motion) {
+    var lean = motion.lean * Math.PI / 180;
+    var c = Math.cos(lean);
+    var s = Math.sin(lean);
+    var dx = local.x - PIVOT.x;
+    var dy = local.y - PIVOT.y;
+    return {
+      x: PIVOT.x + dx * c - dy * s + motion.sway,
+      y: PIVOT.y + dx * s + dy * c + motion.bob
+    };
+  }
+
+  function knee(hip, foot, l1, l2) {
+    var dx = foot.x - hip.x;
+    var dy = foot.y - hip.y;
+    var dist = Math.hypot(dx, dy) || 1;
+    var reach = Math.min(l1 + l2 - 0.5, Math.max(Math.abs(l1 - l2) + 0.5, dist));
+    var base = Math.atan2(dy, dx);
+    var cosA = (l1 * l1 + reach * reach - l2 * l2) / (2 * l1 * reach);
+    var bend = Math.acos(Math.max(-1, Math.min(1, cosA)));
+    var best = null;
+    [1, -1].forEach(function (sign) {
+      var a = base + sign * bend;
+      var k = { x: hip.x + Math.cos(a) * l1, y: hip.y + Math.sin(a) * l1 };
+      if (!best || k.y < best.y - 6 || (Math.abs(k.y - best.y) <= 6 && k.x > best.x)) best = k;
+    });
+    return best;
+  }
+
+  function legPoints(hip, mid, foot) {
+    return hip.x.toFixed(1) + "," + hip.y.toFixed(1) + " " +
+      mid.x.toFixed(1) + "," + mid.y.toFixed(1) + " " +
+      foot.x.toFixed(1) + "," + foot.y.toFixed(1);
+  }
+
+  function pose(now) {
+    var phase = ((now % CYCLE) + CYCLE) % CYCLE / CYCLE;
+    var deg = phase * 360;
+    var motion = ride(phase);
+    var nearFoot = pedal(deg, false);
+    var farFoot = pedal(deg, true);
+    var nearHip = hipAt(HIPS.near, motion);
+    var farHip = hipAt(HIPS.far, motion);
+
+    rear.setAttribute("transform", "rotate(" + (deg * WHEEL_TURNS) + ")");
+    front.setAttribute("transform", "rotate(" + (deg * WHEEL_TURNS) + ")");
+    crank.setAttribute("transform", "rotate(" + deg + ")");
+    pedalNear.setAttribute("transform", "translate(0 " + PEDAL_R + ") rotate(" + (-deg) + ")");
+    pedalFar.setAttribute("transform", "translate(0 " + (-PEDAL_R) + ") rotate(" + (-deg) + ")");
+    pelican.setAttribute("transform",
+      "translate(" + motion.sway.toFixed(2) + " " + motion.bob.toFixed(2) + ") " +
+      "rotate(" + motion.lean.toFixed(2) + " " + PIVOT.x + " " + PIVOT.y + ")");
+    legNear.setAttribute("points", legPoints(nearHip, knee(nearHip, nearFoot, HIPS.near.l1, HIPS.near.l2), nearFoot));
+    legFar.setAttribute("points", legPoints(farHip, knee(farHip, farFoot, HIPS.far.l1, HIPS.far.l2), farFoot));
+    footNear.setAttribute("transform", "translate(" + nearFoot.x.toFixed(1) + " " + nearFoot.y.toFixed(1) + ")");
+    footFar.setAttribute("transform", "translate(" + farFoot.x.toFixed(1) + " " + farFoot.y.toFixed(1) + ")");
+  }
+
+  pose(0);
+  var started = null;
+  requestAnimationFrame(function loop(now) {
+    if (started === null) started = now;
+    pose(now - started);
+    requestAnimationFrame(loop);
+  });
+})();
+</script>
+</html>
